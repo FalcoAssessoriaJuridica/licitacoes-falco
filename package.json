@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "start": "serve -s dist -l tcp://0.0.0.0:80 -l tcp://0.0.0.0:3000",
+    "start": "node prod-server.mjs",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
