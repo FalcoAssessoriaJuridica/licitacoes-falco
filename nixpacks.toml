@@ -1,7 +1,0 @@
-# Node 22 (Vite 7 + Tailwind v4 exigem 20+). Start = servidor estático em
-# Node puro (server.mjs) na porta 80, que é para onde o EasyPanel roteia.
-[phases.setup]
-nixPkgs = ["nodejs_22"]
-
-[start]
-cmd = "node server.mjs"
