@@ -1,0 +1,3 @@
+# Nixpacks estava pegando Node 18; Vite 7 + Tailwind v4 exigem Node 20+.
+[phases.setup]
+nixPkgs = ["nodejs_22"]
