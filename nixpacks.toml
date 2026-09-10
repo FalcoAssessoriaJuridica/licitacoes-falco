@@ -1,3 +1,11 @@
-# Nixpacks estava pegando Node 18; Vite 7 + Tailwind v4 exigem Node 20+.
+# Nixpacks pegava Node 18 (Vite 7 + Tailwind v4 exigem 20+) e, ao detectar
+# "site Vite", trocava o start por um Caddy próprio numa porta que não bate
+# com o EasyPanel. Fixamos as duas coisas:
+
 [phases.setup]
 nixPkgs = ["nodejs_22"]
+
+# usa o nosso start (serve -s dist -l $PORT) — igual ERP/CRM. $PORT vem do
+# EasyPanel; sem ele, cai em 3000.
+[start]
+cmd = "npm run start"
