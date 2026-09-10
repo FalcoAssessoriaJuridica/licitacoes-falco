@@ -20,10 +20,14 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
-try {
-  process.loadEnvFile('.env.local');
-} catch {
-  /* sem .env.local — assume variáveis já no ambiente */
+// Variáveis já no ambiente (CI, seed de produção) têm prioridade;
+// só cai no .env.local se elas não vierem.
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  try {
+    process.loadEnvFile('.env.local');
+  } catch {
+    /* sem .env.local — assume variáveis já no ambiente */
+  }
 }
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
