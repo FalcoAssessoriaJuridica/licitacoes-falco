@@ -4,7 +4,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = Number(process.env.PORT) || 3000;
 const DIST = path.join(__dirname, 'dist');
 
 const MIME = {
@@ -22,7 +21,7 @@ const MIME = {
   '.woff2': 'font/woff2',
 };
 
-const server = http.createServer((req, res) => {
+function handler(req, res) {
   if (req.url === '/health' || req.url === '/api/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok' }));
@@ -46,8 +45,21 @@ const server = http.createServer((req, res) => {
   });
 
   fs.createReadStream(filePath).pipe(res);
-});
+}
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[Falco Licitações] Servindo SPA em http://0.0.0.0:${PORT}`);
+const targetPorts = Array.from(new Set([
+  Number(process.env.PORT) || 3000,
+  80,
+  3000,
+  8080
+]));
+
+targetPorts.forEach(port => {
+  const s = http.createServer(handler);
+  s.on('error', (err) => {
+    // Porta já ocupada ou sem permissão de bind secundário
+  });
+  s.listen(port, '0.0.0.0', () => {
+    console.log(`[Falco Licitações] ✅ Servidor SPA ativo em http://0.0.0.0:${port}`);
+  });
 });
