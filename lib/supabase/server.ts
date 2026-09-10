@@ -11,7 +11,9 @@ import type { Database } from '@/types/database';
  */
 export async function createClient() {
   const cookieStore = await cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'https://djzlxcllzznrjqbtgnen.supabase.co';
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 
   return createServerClient<Database>(
