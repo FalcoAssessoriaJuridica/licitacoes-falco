@@ -1,0 +1,247 @@
+@import "tailwindcss";
+@import "./styles/themes.css";
+
+/* modo escuro por classe (não media-query) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------
+   Mapeia utilitários Tailwind -> tokens de tema (var(--...)).
+   Componentes usam sempre estes nomes neutros; cada tema resolve
+   os valores em styles/themes.css.
+   --------------------------------------------------------------- */
+@theme inline {
+  --color-app-bg: var(--bg-app);
+  --color-app-bg-2: var(--bg-app-2);
+  --color-main: var(--text-main);
+  --color-muted-text: var(--text-muted);
+  --color-dim-text: var(--dim-text);
+  --color-panel-bg: var(--panel-bg);
+  --color-panel-border: var(--panel-border);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-dark: var(--accent-dark);
+  --color-accent-fg: var(--accent-fg);
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-st-neutral: var(--st-neutral);
+  --color-st-warn: var(--st-warn);
+  --color-st-ok: var(--st-ok);
+  --color-st-info: var(--st-info);
+
+  --font-sans: var(--font-sans-theme);
+  --font-serif: var(--font-serif-theme);
+  --font-display: var(--font-serif-theme);
+  --font-mono: var(--font-mono-theme);
+}
+
+@layer base {
+  * {
+    border-color: var(--panel-border);
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 800px at 15% -10%, var(--bg-app-2), transparent 60%),
+      var(--bg-app);
+    color: var(--text-main);
+    font-family: var(--font-sans-theme);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--accent-hover);
+  }
+  ::selection {
+    background: var(--accent-glow);
+  }
+  /* ícone do date input segue o tema */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: saturate(0) opacity(0.6);
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    transition:
+      background 0.2s ease,
+      box-shadow 0.25s ease,
+      transform 0.25s ease,
+      border-color 0.2s ease;
+  }
+  .card-interactive:hover {
+    background: var(--card-bg-hover);
+    box-shadow: var(--card-hover-shadow);
+    border-color: color-mix(in oklab, var(--accent) 45%, var(--card-border));
+    transform: translateY(-2px);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    box-shadow: 0 6px 18px -8px var(--accent-glow);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    filter: brightness(1.03);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+    color: var(--accent);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: color-mix(in oklab, var(--accent) 10%, transparent);
+    border-color: var(--accent);
+  }
+  .btn-quiet {
+    background: transparent;
+    color: var(--text-muted);
+  }
+  .btn-quiet:hover:not(:disabled) {
+    color: var(--text-main);
+  }
+  .btn-danger {
+    background: transparent;
+    border-color: color-mix(in oklab, #e5484d 40%, transparent);
+    color: #e5646a;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: color-mix(in oklab, #e5484d 12%, transparent);
+  }
+
+  .input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    border-radius: var(--radius);
+    padding: 0.55rem 0.75rem;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .input::placeholder {
+    color: var(--dim-text);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  textarea.input {
+    line-height: 1.55;
+    resize: vertical;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .page-title {
+    font-family: var(--font-serif-theme);
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    color: var(--text-main);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1px solid transparent;
+  }
+  .badge::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+  .badge-neutral {
+    color: var(--st-neutral);
+    background: color-mix(in oklab, var(--st-neutral) 14%, transparent);
+    border-color: color-mix(in oklab, var(--st-neutral) 30%, transparent);
+  }
+  .badge-warn {
+    color: var(--st-warn);
+    background: color-mix(in oklab, var(--st-warn) 14%, transparent);
+    border-color: color-mix(in oklab, var(--st-warn) 30%, transparent);
+  }
+  .badge-ok {
+    color: var(--st-ok);
+    background: color-mix(in oklab, var(--st-ok) 14%, transparent);
+    border-color: color-mix(in oklab, var(--st-ok) 30%, transparent);
+  }
+  .badge-info {
+    color: var(--st-info);
+    background: color-mix(in oklab, var(--st-info) 14%, transparent);
+    border-color: color-mix(in oklab, var(--st-info) 30%, transparent);
+  }
+
+  .mono {
+    font-family: var(--font-mono-theme);
+    font-variant-numeric: tabular-nums;
+  }
+}

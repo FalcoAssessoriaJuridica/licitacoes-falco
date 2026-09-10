@@ -1,120 +1,74 @@
-# Plataforma de Licitações — Falco Assessoria Jurídica
+# Falco — Licitações
 
-App web para **defesa de licitantes/contratados** (CAIXA, Banco do Brasil,
-Petrobras, Correios e órgãos sob a Lei 14.133/2021): organiza casos e **gera
-peças fundamentadas** com a Claude, usando a base de conhecimento migrada da
-skill `licitacoes-falco`.
+App de defesa de licitantes/contratados: organiza casos e **gera peças
+fundamentadas** com a base de conhecimento da skill `licitacoes-falco`.
 
-- **Fase 1** (pronta): auth, tenants/usuários, CRUD de casos.
-- **Fase 2** (pronta): base de conhecimento no banco · chave da Anthropic por
-  usuário (criptografada) · wizard de geração de peça · histórico de versões.
-- **Fase 3**: multi-provedor (OpenAI, Ollama local). **Fase 4**: multi-tenant
-  comercial (onboarding, billing).
+**React + Vite** (mesma stack do ERP/CRM) · **Supabase** (Auth + Postgres + RLS)
+· IA **provedor-agnóstica** chamada no navegador (qualquer API OpenAI-compatível,
+Anthropic, Gemini, ou um modelo local / no seu servidor).
 
-Stack: Next.js 15 (App Router) · Supabase (Postgres + Auth + RLS) · Tailwind ·
-`@anthropic-ai/sdk`.
-
----
-
-## Rodar localmente
-
-Pré-requisitos: Node 22+, Docker, [Supabase CLI](https://supabase.com/docs/guides/cli).
+## Rodar local
 
 ```bash
-# 1. Sobe Postgres + Auth locais (portas deslocadas +3000 p/ coexistir com
-#    outro Supabase local — API em 57321). Aplica migrations 001 e 002.
-npm run db:start
-npm run db:reset
-
-# 2. Configura o ambiente
-cp .env.example .env.local
-#   Preencha NEXT_PUBLIC_SUPABASE_ANON_KEY e SUPABASE_SERVICE_ROLE_KEY com o
-#   que `supabase status` imprime. Gere APP_ENCRYPTION_KEY:
-openssl rand -base64 32        # cole em APP_ENCRYPTION_KEY no .env.local
-
-# 3. Semeia a base de conhecimento (11 linhas globais, da skill licitacoes-falco)
-npm run seed:conhecimento
-
-# 4. Sobe o app
-npm run build && npx next start -p 3000
-#   (use `next start`, não `next dev` — ver nota no fim)
+cp .env.example .env      # já vem apontando p/ o Supabase de produção
+npm install
+npm run dev               # http://localhost:3000
 ```
 
-Acesse `http://localhost:3000` → cria conta → **Configurações** (cole sua chave
-`sk-ant-...`) → **Novo caso** → **Gerar peça**.
+`.env` — Vite só expõe ao cliente o que tem prefixo `VITE_`:
 
-### Migrations
-
-`supabase/migrations/` é a fonte da verdade do schema. Ao mexer:
-
-```bash
-supabase migration new <slug>     # cria o arquivo
-# edite, depois:
-npm run db:reset                   # reaplica tudo do zero + re-seed manual
-npm run seed:conhecimento
+```
+VITE_SUPABASE_URL=https://djzlxcllzznrjqbtgnen.supabase.co
+VITE_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...   # só p/ o script de seed (node)
 ```
 
----
+## Deploy (EasyPanel)
 
-## Deploy
+Igual aos outros projetos: serviço **App** → Source GitHub → **Nixpacks**
+(detecta Vite). Build `npm run build`, start `npm run start`
+(`serve -s dist -l $PORT`). Sem Docker, sem SSR.
 
-Supabase Cloud (projeto `djzlxcllzznrjqbtgnen`) + **EasyPanel** no VPS
-(deploy via GitHub, build por Dockerfile, domínio e SSL geridos pelo EasyPanel).
-Passo a passo completo em [`docs/DEPLOY.md`](docs/DEPLOY.md).
+**Build Arguments** (o Vite embute no bundle na hora do build):
+`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+Domínio `licitacoes.falcotech.com.br` → porta do serviço.
 
-Resumo: schema (`supabase/deploy-fresh.sql` no SQL Editor, ou `supabase db push`)
-→ Auth (Email + Google, URLs do domínio) → `npm run seed:conhecimento` apontado
-para produção → serviço no EasyPanel (Build Args `NEXT_PUBLIC_*`, Environment
-`APP_ENCRYPTION_KEY`/`ANTHROPIC_MODEL_PADRAO`, porta 3000, domínio) → `git push`.
-
-`docker-compose.yml` é só para rodar local — o EasyPanel não o usa.
-
----
+Passo a passo em [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## Estrutura
 
 ```
-app/
-  login/                        auth (email/senha + Google)
-  dashboard/                    lista de casos
-  casos/novo/                   novo caso
-  casos/[id]/                   detalhe + lista de peças
-  casos/[id]/gerar/             wizard de geração
-  casos/[id]/pecas/[pecaId]/    peça gerada (texto + prompt de auditoria)
-  configuracoes/                chave da Anthropic do usuário
-  api/casos/[id]/gerar-peca/    POST — monta prompt, chama Claude, grava peça
-  api/configuracoes/            GET/PUT — config de LLM (chave criptografada)
-lib/
-  cripto.ts                     AES-256-GCM p/ a chave da Anthropic
-  llm/anthropic.ts              adapter do @anthropic-ai/sdk
-  prompts/sistema.ts            prompt base (gêmeo de system-prompt-portatil.md)
-  prompts/montar.ts             seleção de conhecimento + montagem do prompt
-  api/http.ts                   envelopes { data } / { error }
-  supabase/                     clients (browser, server, middleware)
-scripts/seed-base-conhecimento.mjs   migra ~/.claude/skills/licitacoes-falco → base_conhecimento
-supabase/migrations/            001 (schema Fase 1) · 002 (conhecimento global + geração)
+src/
+  pages/            Login · Dashboard · CasoNovo · CasoDetalhe · CasoGerar · Peca · Configuracoes
+  components/       Layout · ProtectedRoute · ThemeMenu · StatusBadge · CopyButton
+  contexts/         AuthContext (Supabase) · ThemeContext (4 temas × dark/light)
+  services/         supabase.js · dados.js (todas as queries)
+  lib/
+    llm/index.js    adaptadores: openai-compat | anthropic | gemini (chamada no browser)
+    prompts/        sistema.js + montar.js  (gêmeos da skill licitacoes-falco)
+    rotulos.js
+  styles/themes.css 4 temas: erp · editorial · precisao · chancelaria
+supabase/migrations/  001 schema · 002 conhecimento global · 003 config LLM agnóstica
+scripts/seed-base-conhecimento.mjs   migra ~/.claude/skills/licitacoes-falco -> base_conhecimento
 ```
 
-### Como a peça é montada
+## Temas
 
-`api/casos/[id]/gerar-peca` → carrega o caso (RLS) e a config do usuário →
-decifra a chave → `selecionarConhecimento()` pega **00-MESTRE** + o
-**regulamento da entidade** do caso + as **fichas de doutrina da fase** →
-`montarSystem()`/`montarConteudoUsuario()` → `gerarPeca()` (Anthropic) →
-grava em `pecas_geradas` (versão = max+1) com `prompt_usado` para auditoria.
+Seletor no cabeçalho e em Configurações. Cada tema define ~20 tokens CSS
+(`--accent`, `--card-bg`, `--font-serif`, …); os componentes usam nomes neutros
+(`bg-app-bg`, `text-main`, `btn-primary`, `card`, `badge`). `data-theme` +
+classe `.dark`/`.light` no `<html>`, persistido em `localStorage`.
 
-`base_conhecimento` com `tenant_id = null` é a base global (de fábrica); a
-Fase 4 permite linhas por tenant que sobrescrevem por `slug`.
+- **erp** — Executive Legal Luxury (ônix & ouro), do `DESIGN.md` do ERP
+- **editorial** — papel, Newsreader, oxblood, filetes finos
+- **precisao** — neutro frio, IBM Plex, numerais mono, tabela densa
+- **chancelaria** — grafite profundo, Cormorant + Hanken, latão
 
----
+## IA
 
-## Notas
-
-- **`next dev` trava** neste caminho (há um `~/package-lock.json` solto que
-  confunde a detecção de workspace; e `turbopack.root` no config faz o
-  `next build` travar — por isso não está lá). Para desenvolver, use
-  `npm run build && npx next start`. A saída `standalone` (Docker) só liga com
-  `BUILD_STANDALONE=1`.
-- O `.env.local` de desenvolvimento aponta para o Supabase **local** (57321).
-- A chave da Anthropic **nunca** volta para o cliente; a API só informa
-  `chave_configurada: true/false`.
+`Configurações › Provedor de IA`: formato (OpenAI-compatível / Anthropic /
+Gemini) + Base URL + chave + modelo, com presets e "Testar conexão". A chamada
+sai do **navegador** — única forma de alcançar Ollama/LM Studio na sua máquina
+ou um gateway no seu servidor; serve igual para API remota. Chave guardada na
+linha do usuário em `configuracoes_llm_usuario`, protegida por RLS.
+Para Ollama: rode com `OLLAMA_ORIGINS=*`.

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Falco — Licitações</title>
+    <meta name="theme-color" content="#060608" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      // Aplica tema + modo antes da 1ª pintura (evita flash).
+      (function () {
+        try {
+          var THEMES = ['erp', 'editorial', 'precisao', 'chancelaria'];
+          var t = localStorage.getItem('falco_theme');
+          if (THEMES.indexOf(t) === -1) t = 'erp';
+          var m = localStorage.getItem('falco_mode');
+          if (m !== 'dark' && m !== 'light') {
+            m = window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark';
+          }
+          var root = document.documentElement;
+          root.setAttribute('data-theme', t);
+          root.classList.remove('dark', 'light');
+          root.classList.add(m);
+          root.style.colorScheme = m;
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'erp');
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
